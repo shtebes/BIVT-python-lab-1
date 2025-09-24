@@ -1,0 +1,1 @@
+price, discount, vat = float(input()).split()
