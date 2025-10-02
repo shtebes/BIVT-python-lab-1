@@ -1,6 +1,6 @@
-fio = input("ФИО: ")
-fio_no_probel = ' '.join(fio.split())
-words = fio_no_probel.split()
-initials = ''.join([i[0].upper() for i in words])
-print(f"Инициалы: {initials}.")
-print(f"Длина (символов): {len(fio_no_probel)}")
+fio = input("ФИО: ").split()
+len_fio = 0
+for i in fio:
+    len_fio += len(i)
+print(f"Инициалы: {fio[0][0] + fio[1][0] + fio[2][0]}.")
+print(f"Длина (символов): {len_fio + 2}")
