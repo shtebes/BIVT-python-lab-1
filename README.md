@@ -58,15 +58,14 @@ print(f"Длина (символов): {len(fio_no_probel)}")
 ### _Задание 6_
 
 ```python
-n = int(input())
+kol_player = int(input())
 online = 0
 offline = 0
-for i in range (n):
+for player in range (kol_player):
     stroka = input().split()
     if stroka[-1] == 'True': online+=1
     else: offline+=1
 print(online,offline)
-
 ```
 ![скриншот 6](./images/lab01/ex06.png)
 
@@ -74,26 +73,26 @@ print(online,offline)
 
 ```python
 stroka = input()
-word =''
-ind1 = -1
-ind2 = -1
-k = 0
+word = ''
+ind_1 = -1
+ind_2 = -1
+flag = 0
 for i in range(len(stroka)):
-    if stroka[i].isupper() and ind1 == -1:
+    if stroka[i].isupper() and ind_1 == -1:
         word += stroka[i]
-        ind1 = i
-    if stroka[i].isdigit() and ind2 == -1:
+        ind_1 = i
+    if stroka[i].isdigit() and ind_2 == -1:
         word += stroka[i + 1]
-        ind2 = i + 1
-        indp = ind2
-    if ind1 > -1 and ind2 > -1 and k == 0:
-        step = ind2-ind1
-        if i - indp == step:
-            word+=stroka[i]
-            indp = i
+        ind_2 = i + 1
+        ind_pred = ind_2
+    if ind_1 > -1 and ind_2 > -1 and flag == 0:
+        step = ind_2-ind_1
+        if i - ind_pred == step:
+            word += stroka[i]
+            ind_pred = i
             if stroka[i] == '.':
                 print(word)
-                k = 1
+                flag = 1
 ```
 ![скриншот 7](./images/lab01/ex07.png)
 
