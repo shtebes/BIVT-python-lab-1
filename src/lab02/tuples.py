@@ -1,14 +1,24 @@
 def format_record(rec: tuple[str, str, float]) -> str:
+    if not tuple[0]:
+        return "ValueError"
     fio, group, gpa = rec
-    f_i_o = ' '.join(fio.split()).splt()
-    if len(f_i_o) < 2:
-        raise ValueError()
+    fio_f = ' '.join(fio.split()).split()
+    if len(fio_f) < 2:
+        return "ValueError"
     initials = []
-    for i in f_i_o[1:]:
-        if i:
-            initial = i[0].upper() + '.'
-            initials.append(initial)
-    fio_format = f"{f_i_o[0]} {' '.join(initials)}"
-    return f"{fio_format}, гр. {' '.join(group.split())}, GPA {gpa:.2f}"
+    for i in fio_f[1:]:
+        initials.append(i[0].upper() + '.')
+    group_f = group.strip()
+    if not group_f:
+        return "ValueError"
+    if gpa < 0:
+        return "TypeError"
+    return f"{fio_f[0].title()} {''.join(initials)}, гр. {group_f}, GPA {gpa:.2f}"
 
-print(format_record)
+print(format_record(("Иванов Иван Иванович", "BIVT-25", 4.6)))
+print(format_record(("Петров Пётр", "IKBO-12", 5.0)))
+print(format_record(("Петров Пётр Петрович", "IKBO-12", 5.0)))
+print(format_record(("  сидорова  анна   сергеевна ", "ABB-01", 3.999)))
+print(format_record(("", "ABB-01", 3.999)))
+print(format_record(("  сидорова  анна   сергеевна ", "  ", 3.999)))
+print(format_record(("  сидорова  анна   сергеевна ", "ABB-01", -3.999)))
