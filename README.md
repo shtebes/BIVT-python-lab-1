@@ -1,6 +1,6 @@
-## Лабораторная работа 1
+# Лабораторная работа 1
 
-### _Задание 1_
+## _Задание 1_
 
 ```python
 name = input("Имя: ")
@@ -9,7 +9,7 @@ print(f"Привет, {name}! Через год тебе будет {age+1}.")
 ```
 ![скриншот 1](./images/lab01/ex01.png)
 
-### _Задание 2_
+## _Задание 2_
 
 ```python
 a = float(input("a: ").replace(',','.'))
@@ -20,7 +20,7 @@ print(f"sum={summa:.2f}; avg={avg:.2f}")
 ```
 ![скриншот 2](./images/lab01/ex02.png)
 
-### _Задание 3_
+## _Задание 3_
 
 ```python
 price, discount, vat = map(float, input().split())
@@ -33,7 +33,7 @@ print(f"Итого к оплате:    {total:.2f} ₽")
 ```
 ![скриншот 3](./images/lab01/ex03.png)
 
-### _Задание 4_
+## _Задание 4_
 
 ```python
 all_minutes = int(input("Минуты: "))
@@ -43,7 +43,7 @@ print(f"{hour}:{minute:02d}")
 ```
 ![скриншот 4](./images/lab01/ex04.png)
 
-### _Задание 5_
+## _Задание 5_
 
 ```python
 fio = input("ФИО: ").split()
@@ -55,7 +55,7 @@ print(f"Длина (символов): {len_fio + 2}")
 ```
 ![скриншот 5](./images/lab01/ex05.png)
 
-### _Задание 6_
+## _Задание 6_
 
 ```python
 kol_player = int(input())
@@ -69,7 +69,7 @@ print(online,offline)
 ```
 ![скриншот 6](./images/lab01/ex06.png)
 
-### _Задание 7_
+## _Задание 7_
 
 ```python
 stroka = input()
@@ -96,26 +96,30 @@ for i in range(len(stroka)):
 ```
 ![скриншот 7](./images/lab01/ex07.png)
 
-## Лабораторная работа 2
+# Лабораторная работа 2
 
-### _Задание 1_
-
+## _Задание 1_
+### Функция нахождения минимума и максимума
 ```python
 def min_max(nums: list[float | int]) -> tuple[float | int, float | int]:
     if not nums:
         return "ValueError"
     min_zn = nums[0]
     max_zn = nums[0]
-    for x in nums[1:]:
+    for x in nums:
         if x < min_zn:
             min_zn = x
         if x > max_zn:
             max_zn = x
     return min_zn, max_zn
-
+```
+### Функция по отсортированному списку уникальных значений
+```python
 def unique_sorted(nums: list[float | int]) -> list[float | int]:
     return sorted(set(nums))
-
+```
+### Функция по расплющению списка списков/кортежей в один список по строкам
+```python
 def flatten(mat: list[list | tuple]) -> list:
     flat_list = []
     for i in mat:
@@ -127,8 +131,8 @@ def flatten(mat: list[list | tuple]) -> list:
 ```
 ![скриншот 1](./images/lab02/ex01.png)
 
-### _Задание 2_
-
+## _Задание 2_
+### Дополнительная функция, проверяющая прямоугольность матрицы
 ```python
 def check_rectangular(mat: list[list[float | int]]) -> bool:
     if not mat:
@@ -137,6 +141,10 @@ def check_rectangular(mat: list[list[float | int]]) -> bool:
     for i, row in enumerate(mat):
         if len(row) != len_row_1:
             return False
+```
+
+### Функция, меняющая строки и столбцы местами
+```python
 def transpose(mat: list[list[float | int]]) -> list[list]:
     if not mat:
         return []
@@ -149,36 +157,44 @@ def transpose(mat: list[list[float | int]]) -> list[list]:
             trans_row.append(mat[i][j])
         trans_mat.append(trans_row)
     return trans_mat
-
+```
+### Функция нахождения суммы по каждой строке
+```python
 def row_sums(mat: list[list[float | int]]) -> list[float]:
     if not mat:
         return []
     if check_rectangular(mat) == False:
         return "ValueError"
-    sum_mat = []
+    sum_row = []
     for row in mat:
-        sum_mat.append(float(sum(row)))
-    return sum_mat
+        sum_row.append(float(sum(row)))
+    return sum_row
+```
 
+### Функция нахождения суммы по каждому столбцу
+```python
 def col_sums(mat: list[list[float | int]]) -> list[float]:
     if not mat:
         return []
     if check_rectangular(mat) == False:
         return "ValueError"
-    sum_mat_2 = []
-    for j in range(len(mat[0])):
-        col_sum = sum(mat[i][j] for i in range (len(mat)))
-        sum_mat_2.append(float(col_sum))
-    return sum_mat_2
+    return row_sums(transpose(mat))
 ```
 ![скриншот 1](./images/lab02/ex02.png)
 
-### _Задание 3_
-
+## _Задание 3_
+### Возвращает строку вида: Иванов И.И., гр. BIVT-25, GPA 4.60
 ```python
 def format_record(rec: tuple[str, str, float]) -> str:
-    if not tuple[0]:
-        return "ValueError"
+    if not isinstance(rec, tuple) or len(rec) != 3:
+        return ValueError()
+    if not isinstance(rec[0], str):
+        raise TypeError()
+    if not isinstance(rec[1], str):
+        raise TypeError()
+    if not isinstance(rec[2], (int, float)):
+        raise TypeError()
+    
     fio, group, gpa = rec
     fio_f = ' '.join(fio.split()).split()
     if len(fio_f) < 2:
@@ -192,12 +208,12 @@ def format_record(rec: tuple[str, str, float]) -> str:
     if gpa < 0:
         return "TypeError"
     return f"{fio_f[0].title()} {''.join(initials)}, гр. {group_f}, GPA {gpa:.2f}"
-
 ```
 ![скриншот 3](./images/lab02/ex03.png)
 
-## Лабораторная работа 3
-### Модуль 'src/lib/text.py'
+# Лабораторная работа 3
+## Реализация функций в модуле 'src/lib/text.py'
+###
 ```python
 import re
 def normalize(text: str, *, casefold: bool = True, yo2e: bool = True) -> str:
@@ -211,36 +227,47 @@ def normalize(text: str, *, casefold: bool = True, yo2e: bool = True) -> str:
     text = re.sub(r'[\t\r\n]', ' ', text)
     text = re.sub(r'\s+', ' ', text).strip()
     return text
+```
 
+### Разбиение на «слова» по небуквенно-цифровым разделителям
+```python
 def tokenize(text: str) -> list[str]:
     if not text:
         return []
     f = r'\w+(?:-\w+)*'
     allf = re.findall(f, text)
     return allf
+```
 
+### Подсчет частот
+```python
 def count_freq(tokens: list[str]) -> dict[str, int]:
     freq_dict = {}
     for t in tokens:
         freq_dict[t] = freq_dict.get(t, 0) + 1
     return freq_dict
+```
 
+### Вывод топа-N по убыванию частоты
+```python
 def top_n(freq: dict[str, int], n: int = 5) -> list[tuple[str, int]]:
     sorted_items = sorted(freq.items(), key=lambda x: (-x[1], x[0]))
     return sorted_items[:n]
 ```
+Проверим работоспособность функций:
 ![скриншот 1](./images/lib/lib1.png)
 
-### Скрипт `src/lab03/text_stats.py`
+## Скрипт `src/lab03/text_stats.py`
+Скрипт читает текста из терминала, вызывает функции из src/lib/text.py.
 ```python
 import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'lib'))
 from text import normalize, tokenize, count_freq, top_n
 
-def print_table(top_words, total_words, unique_words):
+def print_table(top_words, total_words, unique_words): #Задание со звездочкой(табличный вывод)
     max_len = max(len(word) for word, i in top_words)
-    column_width = max(max_len, 6)
+    column_width = max(max_len, 6) #Ширина первого столбца
     table_width = column_width + 15
     print(f"Всего слов: {total_words}")
     print(f"Уникальных слов: {unique_words}")
@@ -260,7 +287,7 @@ def main():
     if not text:
         print("Всего слов: 0")
         print("Уникальных слов: 0")
-        print("Топ-5:")
+        print("Топ-5: -")
         return
     normalized_text = normalize(text)
     tokens = tokenize(normalized_text)

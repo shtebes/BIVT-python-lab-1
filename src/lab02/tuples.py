@@ -1,6 +1,13 @@
 def format_record(rec: tuple[str, str, float]) -> str:
-    if not tuple[0]:
-        return "ValueError"
+    if not isinstance(rec, tuple) or len(rec) != 3:
+        return ValueError()
+    if not isinstance(rec[0], str):
+        raise TypeError()
+    if not isinstance(rec[1], str):
+        raise TypeError()
+    if not isinstance(rec[2], (int, float)):
+        raise TypeError()
+    
     fio, group, gpa = rec
     fio_f = ' '.join(fio.split()).split()
     if len(fio_f) < 2:
