@@ -1,39 +1,33 @@
 import sys
 from pathlib import Path
-sys.path.append(str(Path(__file__).parent.parent))
+#sys.path.append('C:\Users\User\Desktop\BIVT-python-lab-1/src')
 from lib.text import normalize, tokenize, count_freq, top_n
 from io_txt_csv import read_text, write_csv
-
+sys.path.insert(0, str(Path(__file__).parent.parent))
+ 
 def main():
-    input_path = "data/lab04/input.txt"
-    output_path = "data/lab04/report.csv"
-    
-    try:
-        text = read_text(input_path, encod="utf-8")
-    except FileNotFoundError:
-        print(f"Ошибка: {input_path} не найден")
-        sys.exit(1)
-    except UnicodeDecodeError:
-        print(f"Ошибка: падает {input_path}")
-        sys.exit(1)
-    
-    normalized_text = normalize(text)
+    '''Читает один входной файл data/lab04/input.txt
+    Нормализует текст (lib/text.py), токенизирует и считает частоты слов.
+    Сохраняет data/report.csv c колонками: word,count, отсортированными: count ↓, слово ↑ (при равенстве).
+    В консоль печатает краткое резюме:
+       Всего слов: <N>
+       Уникальных слов: <K>
+       Топ-5: (список из top_n)
+    '''
+
+    p=read_text("data/lab04/input.txt") 
+
+    normalized_text = normalize(p)
     tokens = tokenize(normalized_text)
-    
     freq_dict = count_freq(tokens)
-    sorted_words = sorted(freq_dict.items(), key=lambda x: (-x[1], x[0]))
-    
-    rows = [(word, count) for word, count in sorted_words]
-    write_csv(rows, output_path, header=("word", "count"))
-    
+    top_words = top_n(freq_dict, len(freq_dict))
+
+    write_csv(top_n, "data/lab04/report.csv", ["word", "count"])
+    #записывает данные из top в виде csv, в указанный путь, с заголовком
+
+    top_5 = top_n(freq_dict, 5)
     print(f"Всего слов: {len(tokens)}")
     print(f"Уникальных слов: {len(freq_dict)}")
     print("Топ-5:")
-    
-    top_words = top_n(freq_dict, 5)
-    for word, count in top_words:
+    for word, count in top_5:
         print(f"{word}:{count}")
-
-
-if __name__ == "__main__":
-    main()

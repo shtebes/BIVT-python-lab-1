@@ -315,3 +315,257 @@ if __name__ == "__main__":
 C многострочным вводом: python src/lab03/text_stats.py -> [вводите текст] -> [Ctrl+z для завершения].
 
 Табличный вывод мы используем через переменную окружения: в терминале -> $env:TABLE_MODE=1; python src/lab03/text_stats.py (для включения таблицы). Для обычного вывода - простое python src/lab03/text_stats.py, так как по умолчанию табличный вывод выключен.
+
+## Лабораторная работа 4
+### Модуль 'src/lib/io_txt_csv.py'
+```python
+from pathlib import Path
+import csv
+from typing import Iterable, Sequence, Union
+
+def read_text(path: str | Path, encoding: str = "utf-8") -> str: 
+    '''Открывает файл на чтение в указанной кодировке и возвращает содержимое как одну строку
+    Аргументы: 
+       path - путь к файлу (строка или объект Path)
+       encoding - кодировка файла, по умолчанию utf-8
+    Возвращает:
+       данные файла как одну строку
+    Ошибки:
+       FileNotFoundError: если файл не найден
+       UnicodeDecodeError: если кодировка не подходит
+    Выбор другой кодировки:
+        read_text("file.txt")  # по умолчанию чтение в utf-8
+        read_text("file.txt", encoding="cp1251")  # чтение в Windows-1251  
+    '''
+    p = Path(path)
+    return p.read_text(encoding=encoding)
+
+def write_csv(rows: list[tuple | list], path: str | Path, header: tuple[str, ...] | None = None) -> None:
+    '''Создает/перезаписывает CSV с разделителем ","
+    Аргументы:
+       rows - строки, являющиеся списком/кортежом
+       path - путь к файлу
+       header - заголовок (необязательный)
+    Возвращает: ничего, сохраняет файл
+    Ошибки:
+       ValueError - если строки в rows не имеют одинаковую длину 
+    '''
+    p = Path(path)
+    rows = list(rows)
+    for i in range(len(rows) - 1): #проверка на одинаковость длин строк
+        if len(rows[i]) != len(rows[i + 1]):
+            raise ValueError
+    with p.open("w", newline="", encoding="utf-8") as f: #открываю файл для записи, newline=""-контролирует, чтобы не было лишних переносов
+        w=csv.writer(f) 
+        if header is not None:
+            w.writerow(header) #из тз, если передан header, то он записывается первой строкой
+        for r in rows:
+            w.writerow(r)
+```
+### Модуль 'src/lib/text_report.py'
+```python
+import sys
+from pathlib import Path
+#sys.path.append('C:\Users\User\Desktop\BIVT-python-lab-1/src')
+from lib.text import normalize, tokenize, count_freq, top_n
+from io_txt_csv import read_text, write_csv
+sys.path.insert(0, str(Path(__file__).parent.parent))
+ 
+def main():
+    '''Читает один входной файл data/lab04/input.txt
+    Нормализует текст (lib/text.py), токенизирует и считает частоты слов.
+    Сохраняет data/report.csv c колонками: word,count, отсортированными: count ↓, слово ↑ (при равенстве).
+    В консоль печатает краткое резюме:
+       Всего слов: <N>
+       Уникальных слов: <K>
+       Топ-5: (список из top_n)
+    '''
+
+    p=read_text("data/lab04/input.txt") 
+
+    normalized_text = normalize(p)
+    tokens = tokenize(normalized_text)
+    freq_dict = count_freq(tokens)
+    top_words = top_n(freq_dict, len(freq_dict))
+
+    write_csv(top_n, "data/lab04/report.csv", ["word", "count"])
+    #записывает данные из top в виде csv, в указанный путь, с заголовком
+
+    top_5 = top_n(freq_dict, 5)
+    print(f"Всего слов: {len(tokens)}")
+    print(f"Уникальных слов: {len(freq_dict)}")
+    print("Топ-5:")
+    for word, count in top_5:
+        print(f"{word}:{count}")
+
+```
+
+# Лабораторная работа 5
+Создаю файл requirements.txt с одной зависимостью (openpyxl). Устанавливаю через терминал: pip install -r requirements.txt.
+## Задание A — JSON ↔ CSV
+### Функция json -> csv:
+```python
+import json
+import csv
+from pathlib import Path
+
+def json_to_csv(json_path: str, csv_path: str) -> None:
+    """ Преобразует JSON-файл в CSV.
+    Поддерживает список словарей [{...}, {...}], заполняет отсутствующие поля пустыми строками.
+    Кодировка UTF-8. Порядок колонок — как в первом объекте или алфавитный (указать в README).
+    Проверка ошибок:
+       - неверный тип файла, пустой JSON или CSV → ValueError.
+       - осутствующий файл → FileNotFoundError
+    """
+    jp = Path(json_path)
+    if jp.suffix != ".json":
+        raise ValueError() # Неверный тип файла
+    if not jp.exists():
+        raise FileNotFoundError() # Файл не найден
+    
+    # Читаем файл JSON
+    with open(json_path, "r", encoding="utf-8") as json_file:
+        data = json.load(json_file)
+    
+    if len(data) == 0:
+        raise ValueError("Пустой JSON")
+    
+    all_headers = set()
+    for item in data:
+        if not isinstance(item, dict):
+            raise ValueError() # должны быть словарями
+        all_headers.update(item.keys())  # добавляем все ключи объекта
+    
+    headers = sorted(all_headers)  # сортируем для порядка
+    
+    # Запись в CSV
+    with open(csv_path, 'w', newline='', encoding='utf-8') as csv_file:
+        writer = csv.DictWriter(csv_file, fieldnames=headers)
+        writer.writeheader()
+        
+        for item in data:
+            # Заполнение отсутствующих полей для каждого объекта
+            row = {header: item.get(header, '') for header in headers}
+            writer.writerow(row)
+
+```
+Тестирую функцию через строку:
+```python
+json_to_csv("data/lab05/samples/people.json", "data/lab05/out/people_json.csv")
+```
+В результате в папке data/lab05/out создается CSV файл.
+![скриншот 1do](./images/lab05/1do.png)
+![скриншот 1posle](./images/lab05/1posle.png)
+
+### Функция csv -> json:
+```python
+ef csv_to_json(csv_path: str, json_path: str) -> None:
+    """ Преобразует CSV в JSON (список словарей).
+    Заголовок обязателен, значения сохраняются как строки.
+    json.dump(..., ensure_ascii=False, indent=2)
+    """
+    cp = Path(csv_path)
+    if cp.suffix != ".csv":
+        raise ValueError() # Неверный тип файла
+    if not cp.exists():
+        raise FileNotFoundError() # Файл не найден
+    
+    # Читаем файл CSV
+    with open(csv_path, 'r', encoding='utf-8') as csv_file:
+        reader = csv.DictReader(csv_file)
+        rows = list(reader)
+    
+    if len(rows) == 0:
+        raise ValueError() # Пустой CSV
+    
+    # Запись в JSON
+    with open(json_path, 'w', encoding='utf-8') as json_file:
+        json.dump(rows, json_file, ensure_ascii=False, indent=2)
+```
+Тестирую функцию через строку:
+```python
+csv_to_json("data/lab05/samples/people.csv", "data/lab05/out/people_csv.json")
+```
+В результате в папке data/lab05/out создается JSON файл.
+![скриншот 2do](./images/lab05/2do.png)
+![скриншот 2posle](./images/lab05/2posle.png)
+
+## Задание B — CSV → XLSX
+### Функция csv -> xlsx:
+```python
+import csv
+from openpyxl import Workbook
+from openpyxl.utils import get_column_letter
+from pathlib import Path
+
+def csv_to_xlsx(csv_path: str, xlsx_path: str) -> None:
+    """
+    Конвертирует CSV в XLSX.
+    Использовать openpyxl ИЛИ xlsxwriter.
+    Первая строка CSV — заголовок.
+    Лист называется "Sheet1".
+    Колонки — автоширина по длине текста (не менее 8 символов).
+    Проверка ошибок:
+       - неверный тип файла, пустой JSON или CSV → ValueError.
+       - осутствующий файл → FileNotFoundError
+    """
+    wb=Workbook()
+    ws=wb.active
+    ws.title="Sheet1"
+
+    csv_file=Path(csv_path)
+    if not csv_file.exists():
+        raise FileNotFoundError() # Файл не найден
+    if csv_file.suffix != '.csv':
+        raise ValueError() # Неверный тип файла
+    
+    # Чтение CSV данных
+    with open(csv_path, 'r', encoding='utf-8') as f:
+        reader= csv.DictReader(f)
+        rows = list(reader)
+    if len(rows)==0:
+        raise ValueError("Файл не содержит данных")
+    if not reader.fieldnames:
+        raise ValueError("Файл не содержит заголовка")
+    
+    ws.append(reader.fieldnames) # Запись заголовков
+
+    r_count=0
+    for row in rows:
+        r_count+=1
+
+        data_for_ex=[]
+        for title in reader.fieldnames:
+            data_for_ex.append(row[title])
+        ws.append(data_for_ex)
+    if r_count == 0:
+        raise ValueError("Нет данных")
+
+
+    for col_index in range(1,len(reader.fieldnames)+1):
+        column_letter=get_column_letter(col_index)
+        max_len=0
+
+
+        for row in ws[column_letter]:
+            if row.value is not None:
+                max_len=max(max_len,len(str(row.value)))
+
+        m_width=max(max_len+2, 8)
+        ws.column_dimensions[column_letter].width =m_width
+
+
+    xlsx_path = Path(xlsx_path)
+    
+    wb.save(xlsx_path)
+```
+Тестирую функцию через строки:
+```python
+csv_to_xlsx("data/lab05/samples/people.csv", "data/lab05/out/people.xlsx")
+csv_to_xlsx("data/lab05/samples/cities.csv", "data/lab05/out/cities.xlsx")
+```
+В результате в папке data/lab05/out создаются два XLSX файлa.
+![скриншот 3do1](./images/lab05/2do.png)
+![скриншот 3posle1](./images/lab05/3posle1.png)
+![скриншот 3do2](./images/lab05/3do2.png)
+![скриншот 3posle2](./images/lab05/3posle2.png)
