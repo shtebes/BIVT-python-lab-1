@@ -643,7 +643,7 @@ def main():
 if __name__ == "__main__":
     main()
 ```
-**Результаты запуска**
+**Результаты запуска:**
 ![скриншот cat](./images/lab06/cat1.png)
 ![скриншот stats](./images/lab06/stats2.png)
 
@@ -702,6 +702,9 @@ if __name__ == "__main__":
     main()
 ```
 **Результаты запуска:**
+<<<<<<< HEAD
+=======
+
 ![скриншот 1do](./images/lab05/1do.png) ![скриншот 1posle](./images/lab05/1posle.png)
 ![скриншот 2do](./images/lab05/2do.png) ![скриншот 2posle](./images/lab05/2posle.png)
 ![скриншот 3do1](./images/lab05/2do.png) ![скриншот 3posle1](./images/lab05/3posle1.png)
