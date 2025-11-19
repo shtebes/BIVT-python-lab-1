@@ -569,3 +569,143 @@ csv_to_xlsx("data/lab05/samples/cities.csv", "data/lab05/out/cities.xlsx")
 ![скриншот 3posle1](./images/lab05/3posle1.png)
 ![скриншот 3do2](./images/lab05/3do2.png)
 ![скриншот 3posle2](./images/lab05/3posle2.png)
+
+# Лабораторная работа 6
+> **Цель:** Научиться создавать консольные инструменты с аргументами командной строки, подкомандами и флагами. 
+
+## Модуль src/lab06/cli_text.py
+Команда cat - вывод содержимого файла:
+```bash
+py -m src.lab06.cli_text cat --input data/lab05/samples/people.csv -n
+```
+**Аргументы:**
+--input - путь к входному файлу (обязательный)
+-n - нумеровать ли строки при выводе (опциональный)
+Команда stats - анализ частот слов:
+```bash
+py -m src.lab06.cli_text stats --input data/lab05/samples/example1.txt --top 5
+```
+**Аргументы:**
+--input - путь к текстовому файлу (обязательный)
+--top - количество выводимых слов (по умолчанию 5)
+
+**Код:**
+```python
+import argparse
+from pathlib import Path
+from src.lib.text import tokenize, count_freq, top_n
+
+def main():
+    parser = argparse.ArgumentParser(description="CLI‑утилиты лабораторной работы 6")
+    subparsers = parser.add_subparsers(dest="command")
+
+    # подкоманда cat
+    cat_parser = subparsers.add_parser("cat", help="Вывести содержимое файла")
+    cat_parser.add_argument("--input", required=True, help="Путь к входному файлу")
+    cat_parser.add_argument("-n", action="store_true", help="Нумеровать строки")
+
+    # подкоманда stats
+    stats_parser = subparsers.add_parser("stats", help="Частоты слов")
+    stats_parser.add_argument("--input", required=True, help="Входной текстовый файл")
+    stats_parser.add_argument("--top", type=int, default=5)
+
+    args = parser.parse_args()
+
+    file = Path(args.input)
+
+    if args.command == "cat":
+        " вывод содержимого файла построчно (с нумерацией при -n). "
+
+        with open(file, "r", encoding="utf-8") as f:
+            number = 1
+            for row in f:
+                row = row.rstrip("\n") 
+                if args.n: # при указанном флаге выводятся пронумерованные строки
+                    print(f"{number}. {row}")
+                    number += 1
+                else:
+                    print(row)
+    
+    elif args.command == "stats":
+        " анализ частот слов в тексте "
+        with open(file, "r", encoding="utf-8") as f:
+            data = [row for row in f]
+        data = "".join(data)
+        tokens = tokenize(text=data)
+        freq = count_freq(tokens=tokens)
+        top = top_n(freq=freq, n=args.top)
+
+        print(f"Топ-{args.top} слов в файле '{args.input}':")
+        number = 1
+        for x, y in top:
+            print(f"{number}. '{x}' - {y}")
+            number += 1
+
+if __name__ == "__main__":
+    main()
+```
+**Результаты запуска**
+![скриншот cat](./images/lab06/cat1.png)
+![скриншот stats](./images/lab06/stats2.png)
+
+**Справка Help:**
+![скриншот --help](./images/lab06/cli_text_help.png)
+
+## Модуль src/lab06/cli_convert.py
+Команда json2csv, конвертирует JSON в CSV
+```bash
+py -m src.lab06.cli_convert json2csv --in data/lab06/samples/people.json --out data/lab06/out/people_json.csv
+```
+Команда csv2xlsx, конвертирует CSV в XLSX
+```bash
+py -m src.lab06.cli_convert csv2json --in data/lab06/samples/people.csv --out data/lab06/out/people_csv.json
+```
+Команда csv2json, конвертирует CSV в JSON
+```bash
+py -m src.lab06.cli_convert csv2xlsx --in data/lab05/samples/cities.csv --out data/lab06/out/cities_csv.xlsx
+```
+**Аргументы:**
+--in - входной JSON/CSV файл (обязательный)
+--out - выходной CSV/JSON/XLSX файл (обязательный)
+
+**Код:**
+```python
+import argparse
+from src.lab05.json_csv import json_to_csv, csv_to_json
+from src.lab05.csv_xlsx import csv_to_xlsx
+
+def main():
+    parser = argparse.ArgumentParser(description="Конвертеры данных")
+    sub = parser.add_subparsers(dest="cmd")
+
+    json_to_csv_p = sub.add_parser("json2csv", help="Конвертировать JSON в CSV")
+    json_to_csv_p.add_argument("--in", dest="input", required=True)
+    json_to_csv_p.add_argument("--out", dest="output", required=True)
+
+    csv_to_json_p = sub.add_parser("csv2json",  help="Конвертировать CSV в JSON")
+    csv_to_json_p.add_argument("--in", dest="input", required=True)
+    csv_to_json_p.add_argument("--out", dest="output", required=True)
+
+    csv_to_xlsx_p = sub.add_parser("csv2xlsx", help="Конвертировать CSV в XLSX")
+    csv_to_xlsx_p.add_argument("--in", dest="input", required=True)
+    csv_to_xlsx_p.add_argument("--out", dest="output", required=True)
+
+    args = parser.parse_args()
+
+    if args.cmd == "json2csv":
+        json_to_csv(json_path=args.input, csv_path=args.output)
+    elif  args.cmd == "csv2json":
+        csv_to_json(csv_path=args.input, json_path=args.output)
+    elif args.cmd == "csv2xlsx":
+        csv_to_xlsx(csv_path=args.input, xlsx_path=args.output)
+
+if __name__ == "__main__":
+    main()
+```
+**Результаты запуска**
+![скриншот 1do](./images/lab05/1do.png) ![скриншот 1posle](./images/lab05/1posle.png)
+![скриншот 2do](./images/lab05/2do.png) ![скриншот 2posle](./images/lab05/2posle.png)
+![скриншот 3do1](./images/lab05/2do.png) ![скриншот 3posle1](./images/lab05/3posle1.png)
+
+**Справка Help:**
+![скриншот --help](./images/lab06/cli_convert_help.png)
