@@ -401,6 +401,7 @@ def main():
 ```
 
 # Лабораторная работа 5
+> **Цель:** Разобраться с форматом JSON, сериализацией/десериализацией и табличными конвертациями.
 Создаю файл requirements.txt с одной зависимостью (openpyxl). Устанавливаю через терминал: pip install -r requirements.txt.
 ## Задание A — JSON ↔ CSV
 ### Функция json -> csv:
@@ -412,16 +413,16 @@ from pathlib import Path
 def json_to_csv(json_path: str, csv_path: str) -> None:
     """ Преобразует JSON-файл в CSV.
     Поддерживает список словарей [{...}, {...}], заполняет отсутствующие поля пустыми строками.
-    Кодировка UTF-8. Порядок колонок — как в первом объекте или алфавитный (указать в README).
+    Кодировка UTF-8. 
     Проверка ошибок:
        - неверный тип файла, пустой JSON или CSV → ValueError.
        - осутствующий файл → FileNotFoundError
     """
     jp = Path(json_path)
     if jp.suffix != ".json":
-        raise ValueError() # Неверный тип файла
+        raise ValueError() # Выводим ошибку, если тип файла неверный
     if not jp.exists():
-        raise FileNotFoundError() # Файл не найден
+        raise FileNotFoundError() # Выводим ошибку, если файл не найден
     
     # Читаем файл JSON
     with open(json_path, "r", encoding="utf-8") as json_file:
@@ -433,7 +434,7 @@ def json_to_csv(json_path: str, csv_path: str) -> None:
     all_headers = set()
     for item in data:
         if not isinstance(item, dict):
-            raise ValueError() # должны быть словарями
+            raise ValueError() # Проверяем, все ли элементы словари, если нет - ошибка
         all_headers.update(item.keys())  # добавляем все ключи объекта
     
     headers = sorted(all_headers)  # сортируем для порядка
@@ -444,7 +445,7 @@ def json_to_csv(json_path: str, csv_path: str) -> None:
         writer.writeheader()
         
         for item in data:
-            # Заполнение отсутствующих полей для каждого объекта
+            # Заполненяем отсутствующие поля для каждого объекта
             row = {header: item.get(header, '') for header in headers}
             writer.writerow(row)
 
@@ -466,9 +467,9 @@ ef csv_to_json(csv_path: str, json_path: str) -> None:
     """
     cp = Path(csv_path)
     if cp.suffix != ".csv":
-        raise ValueError() # Неверный тип файла
+        raise ValueError() # Выводим ошибку, если тип файла неверный
     if not cp.exists():
-        raise FileNotFoundError() # Файл не найден
+        raise FileNotFoundError() # Выводим ошибку, если файл не найден
     
     # Читаем файл CSV
     with open(csv_path, 'r', encoding='utf-8') as csv_file:
@@ -501,9 +502,7 @@ from pathlib import Path
 def csv_to_xlsx(csv_path: str, xlsx_path: str) -> None:
     """
     Конвертирует CSV в XLSX.
-    Использовать openpyxl ИЛИ xlsxwriter.
     Первая строка CSV — заголовок.
-    Лист называется "Sheet1".
     Колонки — автоширина по длине текста (не менее 8 символов).
     Проверка ошибок:
        - неверный тип файла, пустой JSON или CSV → ValueError.
@@ -515,16 +514,16 @@ def csv_to_xlsx(csv_path: str, xlsx_path: str) -> None:
 
     csv_file=Path(csv_path)
     if not csv_file.exists():
-        raise FileNotFoundError() # Файл не найден
+        raise FileNotFoundError() # Выводим ошибку, если файл не найден
     if csv_file.suffix != '.csv':
-        raise ValueError() # Неверный тип файла
+        raise ValueError() # Выводим ошибку, если тип файла неверный
     
     # Чтение CSV данных
     with open(csv_path, 'r', encoding='utf-8') as f:
         reader= csv.DictReader(f)
         rows = list(reader)
     if len(rows)==0:
-        raise ValueError("Файл не содержит данных")
+        raise ValueError("Файл не содержит данных") 
     if not reader.fieldnames:
         raise ValueError("Файл не содержит заголовка")
     
@@ -702,7 +701,7 @@ def main():
 if __name__ == "__main__":
     main()
 ```
-**Результаты запуска**
+**Результаты запуска:**
 ![скриншот 1do](./images/lab05/1do.png) ![скриншот 1posle](./images/lab05/1posle.png)
 ![скриншот 2do](./images/lab05/2do.png) ![скриншот 2posle](./images/lab05/2posle.png)
 ![скриншот 3do1](./images/lab05/2do.png) ![скриншот 3posle1](./images/lab05/3posle1.png)
