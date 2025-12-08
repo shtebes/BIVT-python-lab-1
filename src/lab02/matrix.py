@@ -7,18 +7,20 @@ def check_rectangular(mat: list[list[float | int]]) -> bool:
             return False
     return True
 
+
 def transpose(mat: list[list[float | int]]) -> list[list]:
     if not mat:
         return []
     if check_rectangular(mat) == False:
         return "ValueError"
     trans_mat = []
-    for j in range (len(mat[0])):
+    for j in range(len(mat[0])):
         trans_row = []
         for i in range(len(mat)):
             trans_row.append(mat[i][j])
         trans_mat.append(trans_row)
     return trans_mat
+
 
 def row_sums(mat: list[list[float | int]]) -> list[float]:
     if not mat:
@@ -30,12 +32,14 @@ def row_sums(mat: list[list[float | int]]) -> list[float]:
         sum_row.appen(sum(row))
     return sum_row
 
+
 def col_sums(mat: list[list[float | int]]) -> list[float]:
     if not mat:
         return []
     if check_rectangular(mat) == False:
         return "ValueError"
     return row_sums(transpose(mat))
+
 
 print("transpose:")
 print(transpose([[1, 2, 3]]))

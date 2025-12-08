@@ -402,6 +402,7 @@ def main():
 
 # Лабораторная работа 5
 > **Цель:** Разобраться с форматом JSON, сериализацией/десериализацией и табличными конвертациями.
+
 Создаю файл requirements.txt с одной зависимостью (openpyxl). Устанавливаю через терминал: pip install -r requirements.txt.
 ## Задание A — JSON ↔ CSV
 ### Функция json -> csv:
@@ -709,3 +710,225 @@ if __name__ == "__main__":
 
 **Справка Help:**
 ![скриншот --help](./images/lab06/cli_convert_help.png)
+
+# Лабораторная работа 7
+> **Цель:** Научиться писать модульные тесты на pytest, измерять покрытие и поддерживать единый стиль кода (black).
+
+## Задание A. Тесты для src/lib/text.py
+```python
+import pytest
+from src.lib.text import normalize, tokenize, count_freq, top_n
+
+@pytest.mark.parametrize(
+    "source, expected",
+    [
+        ("ПрИвЕт\nМИр\t", "привет мир"),
+        ("ёжик, Ёлка", "ежик, елка"),
+        ("Hello\r\nWorld", "hello world"),
+        ("  двойные   пробелы  ", "двойные пробелы"),
+        ("", "")
+    ],
+)
+def test_normalize_basic(source, expected):
+    assert normalize(source) == expected
+
+@pytest.mark.parametrize(
+    "src,expected",
+    [
+        ("привет мир", ["привет", "мир"]),
+        ("hello,world!!!", ["hello", "world"]),
+        ("по-настоящему круто", ["по-настоящему", "круто"]),
+        ("2025 год", ["2025", "год"]),
+        ("emoji 😀 не слово", ["emoji", "не", "слово"]),
+        ("", [])
+    ],
+)
+def test_tokenize(src, expected):
+    assert tokenize(src) == expected
+
+def test_count_freq_and_top_n():
+    tokens = ["a", "b", "a", "c", "b", "a"]
+    freq = count_freq(tokens)
+    assert freq == {"a": 3, "b": 2, "c": 1}
+    assert top_n(freq, 2) == [("a", 3), ("b", 2)]
+
+    freq = count_freq(["bb", "aa", "bb", "aa", "cc"])
+    assert top_n(freq, 2) == [("aa", 2), ("bb", 2)]
+
+    assert count_freq([]) == {}
+    assert top_n({}, 5) == []
+```
+
+![скриншот 1](./images/lab07/test_text_1.png)
+
+## Задание B. Тесты для src/lab05/json_csv.py
+```python
+import json, csv
+from pathlib import Path
+import pytest
+
+from src.lab05.json_csv import json_to_csv, csv_to_json
+
+def write_json(path: Path, obj):
+    path.write_text(json.dumps(obj, ensure_ascii=False, indent=2), encoding="utf-8")
+
+def read_csv_rows(path: Path):
+    with path.open(encoding="utf-8") as f:
+        return list(csv.DictReader(f))
+
+
+def test_json_to_csv_roundtrip(tmp_path: Path):
+    src = tmp_path / "people.json"
+    dst = tmp_path / "people.csv"
+    data = [{"name": "Alice", "age": 22}, {"name": "Bob", "age": 25}]
+    write_json(src, data)
+
+    json_to_csv(str(src), str(dst))
+    rows = read_csv_rows(dst)
+    assert len(rows) == 2
+    assert set(rows[0]) >= {"name", "age"}
+
+    #Тест для пустого JSON:
+    src = tmp_path / "empty.json"
+    dst = tmp_path / "empty.csv"
+    src.write_text("[]", encoding="utf-8")
+
+    try:
+        json_to_csv(str(src), str(dst))
+        if dst.exists():
+            pass
+    except (ValueError, IndexError):
+        pass
+
+
+def test_csv_to_json_roundtrip(tmp_path: Path):
+    src = tmp_path / "people.csv"
+    dst = tmp_path / "people.json"
+    src.write_text("name,age\nAlice,22\nBob,25\n", encoding="utf-8")
+
+    csv_to_json(str(src), str(dst))
+    obj = json.loads(dst.read_text(encoding="utf-8"))
+    assert isinstance(obj, list) and len(obj) == 2
+    assert set(obj[0]) == {"name", "age"}
+
+    #Тест для пустого CSV
+    src = tmp_path / "empty.csv"
+    dst = tmp_path / "empty.json"
+    src.write_text("", encoding="utf-8")
+
+    try:
+        csv_to_json(str(src), str(dst))
+        if dst.exists():
+            pass
+    except (ValueError, Exception):
+        pass
+```
+
+![скриншот 2](./images/lab07/test_2.png)
+
+## Задание C. Стиль кода (black)
+![скриншот 3](./images/lab07/test_black.png)
+
+# Лабораторная работа 8
+> **Цель:** Изучить основы объектно-ориентированного программирования в Python, научиться описывать модели данных с помощью @dataclass, реализовывать методы и валидацию, сериализовывать/десериализовывать объекты.
+
+## Задание A. класс Student (models.py)
+```python
+from dataclasses import dataclass
+from datetime import datetime, date
+import re
+
+@dataclass
+class Student:
+    fio: str
+    birthdate: str
+    group: str
+    gpa: float
+
+    def __post_init__(self):
+        # проверяет данные
+        try:
+            datetime.strptime(self.birthdate, "%Y-%m-%d")
+        except ValueError:
+            raise ValueError(f"Неправильный формат даты: {self.birthdate}. Нужно: ГГГГ-ММ-ДД")
+        
+        if not (0 <= self.gpa <= 5):
+            raise ValueError(f"Средний балл должен быть от 0 до 5, а у вас: {self.gpa}")
+
+    def age(self) -> int:
+        # вернуть количество полных лет
+        birth = datetime.strptime(self.birthdate, "%Y-%m-%d").date()
+        today = date.today()
+        if (today.month, today.day) < (birth.month, birth.day):
+            return today.year - birth.year -1
+        return today.year - birth.year
+
+    def to_dict(self) -> dict:
+        # сериализация
+        return {
+            "fio": self.fio,
+            "birthdate": self.birthdate,
+            "group":self.group,
+            "gpa": self.gpa
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict):
+        # десереализация из словаря
+        return cls(
+            fio = d["fio"],
+            birthdate = d["birthdate"],
+            group = d["group"],
+            gpa = d["gpa"]
+        )
+
+    def __str__(self) -> str:
+        # красивый вывод
+        return f"{self.fio}: группа: {self.group}, возраст: {self.age()}, GPA: {self.gpa}"
+```
+
+## Задание B. модуль serialize.py
+```python
+import json
+from .models import Student
+
+def students_to_json(students, path):
+    "Сохранение списка студентов в JSON файл."
+    data = [student.to_dict() for student in students]
+
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2, sort_keys=True)
+
+    print(f"Данные сохранены в файл: {path}")
+
+def students_from_json(path: str) -> list[Student]:
+    "Загрузка списка студентов из JSON файла."
+  
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        
+        students = [Student.from_dict(item) for item in data]
+        
+        print(f"Загружено {len(students)} студентов из файла: {path}")
+        return students
+    
+    except FileNotFoundError:
+        print(f"Файл не найден: {path}")
+        return []
+    except json.JSONDecodeError:
+        print(f"Ошибка в формате JSON файла: {path}")
+        return []
+```
+
+**Пример запуска:**
+![скриншот 1](./images/lab08/main.png)
+
+**Примеры JSON до/после преобразования:**
+![скриншот 2](./images/lab08/input.png)
+![скриншот 3](./images/lab08/output.png)
+
+# Лабораторная работа 9
+> **Цель:** 
+
+## Задание A. 

@@ -2,6 +2,7 @@ import argparse
 from src.lab05.json_csv import json_to_csv, csv_to_json
 from src.lab05.csv_xlsx import csv_to_xlsx
 
+
 def main():
     parser = argparse.ArgumentParser(description="Конвертеры данных")
     sub = parser.add_subparsers(dest="cmd")
@@ -10,7 +11,7 @@ def main():
     json_to_csv_p.add_argument("--in", dest="input", required=True)
     json_to_csv_p.add_argument("--out", dest="output", required=True)
 
-    csv_to_json_p = sub.add_parser("csv2json",  help="Конвертировать CSV в JSON")
+    csv_to_json_p = sub.add_parser("csv2json", help="Конвертировать CSV в JSON")
     csv_to_json_p.add_argument("--in", dest="input", required=True)
     csv_to_json_p.add_argument("--out", dest="output", required=True)
 
@@ -22,10 +23,11 @@ def main():
 
     if args.cmd == "json2csv":
         json_to_csv(json_path=args.input, csv_path=args.output)
-    elif  args.cmd == "csv2json":
+    elif args.cmd == "csv2json":
         csv_to_json(csv_path=args.input, json_path=args.output)
     elif args.cmd == "csv2xlsx":
         csv_to_xlsx(csv_path=args.input, xlsx_path=args.output)
+
 
 if __name__ == "__main__":
     main()

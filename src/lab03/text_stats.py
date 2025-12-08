@@ -1,7 +1,9 @@
 import sys
 import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'lib'))
+
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "lib"))
 from text import normalize, tokenize, count_freq, top_n
+
 
 def print_table(top_words, total_words, unique_words):
     max_len = max(len(word) for word, i in top_words)
@@ -19,8 +21,9 @@ def print_table(top_words, total_words, unique_words):
         print(f"│ {word:<{column_width}} │ {freq:<10} │")
     print("└" + "─" * (column_width + 2) + "┴" + "─" * 12 + "┘")
 
+
 def main():
-    table_mode = os.getenv('TABLE_MODE', '0') == '1'
+    table_mode = os.getenv("TABLE_MODE", "0") == "1"
     text = sys.stdin.read().strip()
     if not text:
         print("Всего слов: 0")
@@ -42,6 +45,7 @@ def main():
         print("Топ-5:")
         for word, count in top_words:
             print(f"{word}:{count}")
+
 
 if __name__ == "__main__":
     main()

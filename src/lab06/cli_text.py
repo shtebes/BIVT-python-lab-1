@@ -2,6 +2,7 @@ import argparse
 from pathlib import Path
 from src.lib.text import tokenize, count_freq, top_n
 
+
 def main():
     parser = argparse.ArgumentParser(description="CLI‑утилиты лабораторной работы 6")
     subparsers = parser.add_subparsers(dest="command")
@@ -21,20 +22,20 @@ def main():
     file = Path(args.input)
 
     if args.command == "cat":
-        " вывод содержимого файла построчно (с нумерацией при -n). "
+        "вывод содержимого файла построчно (с нумерацией при -n)."
 
         with open(file, "r", encoding="utf-8") as f:
             number = 1
             for row in f:
-                row = row.rstrip("\n") 
-                if args.n: # при указанном флаге выводятся пронумерованные строки
+                row = row.rstrip("\n")
+                if args.n:  # при указанном флаге выводятся пронумерованные строки
                     print(f"{number}. {row}")
                     number += 1
                 else:
                     print(row)
-    
+
     elif args.command == "stats":
-        " анализ частот слов в тексте "
+        "анализ частот слов в тексте"
         with open(file, "r", encoding="utf-8") as f:
             data = [row for row in f]
         data = "".join(data)
@@ -47,6 +48,7 @@ def main():
         for x, y in top:
             print(f"{number}. '{x}' - {y}")
             number += 1
+
 
 if __name__ == "__main__":
     main()
