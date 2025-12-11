@@ -929,6 +929,350 @@ def students_from_json(path: str) -> list[Student]:
 ![скриншот 3](./images/lab08/output.png)
 
 # Лабораторная работа 9
-> **Цель:** 
+> **Цель:** Реализовать простейшее хранилище данных студентов на основе CSV-файла, отработать CRUD-операции (Create / Read / Update / Delete) и научиться работать с ними через отдельный класс Group. 
 
-## Задание A. 
+## Задание A. Реализация класса Group
+```python
+import csv
+from pathlib import Path
+from datetime import datetime
+from typing import List, Optional
+
+from models import Student
+
+
+class Group:
+
+    def __init__(self, storage_path: str):
+        self.path = Path(storage_path)
+        if not self.path.exists():
+            self.path.write_text("", encoding="utf-8") 
+    
+    def _ensure_storage_exists(self):
+        """Создание файла с заголовком, если его нет"""
+        if not self.path.exists():
+            # Создаем директорию, если её нет
+            self.path.parent.mkdir(parents=True, exist_ok=True)
+            # Создаем файл с заголовком
+            with open(self.path, 'w', encoding='utf-8', newline='') as f:
+                writer = csv.DictWriter(f, fieldnames=['fio', 'birthdate', 'group', 'gpa'])
+                writer.writeheader()
+    
+    def _read_all(self) -> List[dict]:
+        """Чтение всех записей из CSV файла"""
+        students = []
+        try:
+            with open(self.path, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    if row:  
+                        students.append(row)
+        except FileNotFoundError:
+            self._ensure_storage_exists()
+        return students
+    
+    def _write_all(self, students: List[dict]):
+        """Запись всех студентов в CSV файл"""
+        with open(self.path, 'w', encoding='utf-8', newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=['fio', 'birthdate', 'group', 'gpa'])
+            writer.writeheader()
+            writer.writerows(students)
+    
+    def list(self) -> List[Student]:
+        """ Получение всех студентов группы """
+        data = self._read_all()
+        return [Student.from_dict(item) for item in data]
+    
+    def add(self, student: Student):
+        """Добавление нового студента"""
+        students = self._read_all()
+        for s in students:
+            if s['fio'] == student.fio:
+                print(f"Студент {student.fio} уже существует!")
+                return False
+        students.append(student.to_dict())
+        self._write_all(students)
+        return True
+    
+    def find(self, substr: str) -> List[Student]:
+        """Поиск студентов по подстроке в ФИО"""
+        all_students = self.list()
+        result = []
+        for student in all_students:
+            if substr.lower() in student.fio.lower():
+                result.append(student)
+        return result
+    
+    def remove(self, fio: str) -> bool:
+        """Удаление студента по ФИО"""
+        students = self._read_all()
+        initial_count = len(students)
+        students = [s for s in students if s['fio'] != fio]
+    
+        if len(students) < initial_count:
+            self._write_all(students)
+            return True
+        return False
+    
+    def update(self, fio: str, **fields) -> bool:
+        """Обновление полей существующего студента"""
+        students = self._read_all()
+        updated = False
+        
+        for student in students:
+            if student['fio'] == fio:
+                for field, value in fields.items():
+                    if field in ['fio', 'birthdate', 'group', 'gpa']:
+                        if field == 'gpa':
+                            student[field] = str(float(value))
+                        else:
+                            student[field] = value
+                updated = True
+                break
+        if updated:
+            self._write_all(students)
+        return updated
+```
+## Метод stats
+```python
+    def stats(self) -> dict:
+        """Статистика по группе (дополнительное задание со звёздочкой)"""
+        students = self.list()
+        
+        if not students:
+            return {
+                "count": 0,
+                "min_gpa": 0,
+                "max_gpa": 0,
+                "avg_gpa": 0,
+                "groups": {},
+                "top_5_students": []
+            }
+
+        gpa_values = [float(s.gpa) for s in students]
+        groups_dict = {}
+        
+        for student in students:
+            group_name = student.group
+            if group_name in groups_dict:
+                groups_dict[group_name] += 1
+            else:
+                groups_dict[group_name] = 1
+        
+        # Топ-5 студентов по GPA
+        sorted_students = sorted(students, key=lambda x: x.gpa, reverse=True)
+        top_5 = [
+            {"fio": s.fio, "gpa": s.gpa}
+            for s in sorted_students[:5]
+        ]
+        
+        return {
+            "count": len(students),
+            "min_gpa": min(gpa_values),
+            "max_gpa": max(gpa_values),
+            "avg_gpa": sum(gpa_values) / len(gpa_values),
+            "groups": groups_dict,
+            "top_5_students": top_5
+        }
+```
+
+**Пример запуска:**
+![скриншот 1](./images/lab09/test.png)
+
+**Файл данных students.csv**
+![скриншот 2](./images/lab09/data.png)
+
+# Лабораторная работа 10
+> **Цель:** Реализовать базовые структуры данных (стек, очередь, связный список), сравнить их производительность и научиться думать в терминах асимптотики (O(1), O(n)).
+
+## Теория
+### Стек (Stack)
+Стек - это структура данных, работающая по принципу LIFO (Last In First Out - последним пришел, первым ушел). Основные операции:
+- `push(item)` - добавить элемент на вершину стека
+- `pop()` - снять элемент с вершины стека
+- `peek()` - посмотреть элемент на вершине без удаления
+- `is_empty()` - проверить, пуст ли стек
+
+**Сложность операций**: O(1) для всех основных операций
+
+### Очередь (Queue)
+Очередь - это структура данных, работающая по принципу FIFO (First In First Out - первым пришел, первым ушел). Основные операции:
+- `enqueue(item)` - добавить элемент в конец очереди
+- `dequeue()` - взять элемент из начала очереди
+- `peek()` - посмотреть элемент в начале без удаления
+- `is_empty()` - проверить, пуста ли очередь
+
+**Сложность операций**: O(1) для всех основных операций
+
+### Односвязный список (Singly Linked List)
+Связный список - это линейная структура данных, состоящая из узлов, где каждый узел содержит значение и ссылку на следующий узел. Основные операции:
+- `append(value)` - добавить в конец
+- `prepend(value)` - добавить в начало
+- `insert(idx, value)` - вставить по индексу
+- `remove(value)` - удалить первое вхождение
+- `remove_at(idx)` - удалить по индексу
+
+**Сложность операций**:
+- Добавление в начало/конец (с tail): O(1)
+- Добавление в конец (без tail): O(n)
+- Вставка/удаление по индексу: O(n) в худшем случае
+- Поиск элемента: O(n)
+
+## Задание A. Реализация Stack и Queue
+```python
+from collections import deque
+
+class Stack:
+    def __init__(self):
+        # внутреннее хранилище стека
+        self._data = []
+
+    def push(self, item):
+        # корректно: добавление в конец списка O(1) амортизированно
+        self._data.append(item)
+
+    def pop(self):
+        if len(self._data) == 0:
+            raise IndexError("Ошибка: Нельзя удалить элемент из пустого stack")
+        return self._data.pop()
+
+    def peek(self):
+        # возвращает верхний элемент без удаления
+        if len(self._data) == 0:
+            return None
+        return self._data[-1]
+
+    def is_empty(self) -> bool:
+        return len(self._data) == 0
+    
+    def __len__(self) -> int:
+        return len(self._data)
+
+
+class Queue:
+    def __init__(self):
+        self._data = deque()
+
+    def enqueue(self, item):
+        # добавление элемента в конец очереди
+        self._data.append(item)
+
+    def dequeue(self):
+        # взять элемент из начала очереди и вернуть его
+        if self.is_empty():
+            raise IndexError("Ошибка: Нельзя удалить элемент из пустой очереди")
+        return self._data.popleft()
+
+    def peek(self):
+        if self.is_empty():
+            return None
+        return self._data[0]
+
+    def is_empty(self) -> bool:
+        return len(self._data) == 0
+    
+    def __len__(self) -> int:
+        return len(self._data)
+```
+
+## Задание B. Реализация SinglyLinkedList 
+```python
+class Node:
+    def __init__(self, value):
+        self.value = value
+        self.next = None
+
+
+class SinglyLinkedList:
+    def __init__(self):
+        self.head = None
+        self.tail = None
+        self._size = 0
+
+    def append(self, value):
+        """Добавить элемент в конец списка"""
+        new_node = Node(value)
+        if self.head is None:
+            self.head = new_node
+            self.tail = new_node
+        else:
+            self.tail.next = new_node
+            self.tail = new_node
+        self._size += 1
+
+    def prepend(self, value):
+        """Добавить элемент в начало списка"""
+        new_node = Node(value, next=self.head)e
+        if self.head is None:
+            self.head = new_node
+            self.tail = new_node
+        else:
+            new_node.next = self.head
+            self.head = new_node
+        
+        self._size += 1
+
+    def insert(self, idx, value):
+        """Вставка по индексу"""
+        if idx < 0 or idx > self._size:
+            raise IndexError(f"Индекс {idx} вне диапазона [0, {self._size}]")
+        
+        if idx == 0:
+            self.prepend(value)
+            return
+        
+        if idx == self._size:
+            self.append(value)
+            return
+        
+        # Вставка в середину
+        new_node = Node(value)
+        current = self.head
+        for i in range(idx - 1):
+            current = current.next
+        
+        new_node.next = current.next
+        current.next = new_node
+        self._size += 1
+    
+    def remove(self, idx):
+        """Удалить элемент по индексу"""
+        if idx < 0 or idx >= self._size:
+            raise IndexError(f"Индекс {idx} вне диапазона [0, {self._size - 1}]")
+        
+        # Удаление из головы
+        if idx == 0:
+            value = self.head.value
+            self.head = self.head.next
+            if self.head is None:
+                self.tail = None
+            self._size -= 1
+            return value
+        # Удаление из середины или конца
+        current = self.head
+        for i in range(idx - 1):
+            current = current.next
+        value = current.next.value
+        if current.next == self.tail:
+            self.tail = current
+        current.next = current.next.next
+        self._size -= 1
+        return value
+
+    def __iter__(self):
+        current = self.head
+        while current is not None:
+            yield current.value
+            current = current.next
+
+    def __len__(self):
+        return self._size
+
+    def __repr__(self):
+        values = list(self)
+        return f"SinglyLinkedList({values})"
+
+```
+
+**пример использования:**
+![скриншот 1](./images/lab10/test.png)

@@ -16,7 +16,7 @@ class Student:
         except ValueError:
             raise ValueError(f"Неправильный формат даты: {self.birthdate}. Нужно: ГГГГ-ММ-ДД")
         
-        if not (0.0 <= self.gpa <= 5.0):
+        if not (0.0 <= float(self.gpa) <= 5.0):
             raise ValueError(f"Средний балл должен быть от 0 до 5, а у вас: {self.gpa}")
 
     def age(self) -> int:
